@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TMSA Public Charter Schools</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06091A;--card:rgba(255,255,255,.045);--card2:rgba(255,255,255,.085);
+  --bd:rgba(255,255,255,.09);--tx:#EEF0FF;--tx2:rgba(238,240,255,.52);--tx3:rgba(238,240,255,.28);
+  --ac:#2b6cb0;--acg:rgba(43,108,176,.18);--acb:rgba(43,108,176,.13);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden}
+canvas#bgc{position:fixed;inset:0;z-index:1;pointer-events:none}
+.glow{position:fixed;inset:0;z-index:0;pointer-events:none;transition:background 1.4s;
+  background:radial-gradient(ellipse 85% 65% at 14% 22%,var(--acg) 0%,transparent 68%),
+             radial-gradient(ellipse 55% 55% at 86% 78%,rgba(232,105,10,.07) 0%,transparent 62%)}
+.scr{position:relative;z-index:1;display:none;min-height:100vh}
+.scr.on{display:flex}
+
+@keyframes rise{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes glo{0%,100%{filter:drop-shadow(0 4px 18px rgba(232,105,10,.28))}50%{filter:drop-shadow(0 12px 34px rgba(232,105,10,.52))}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.22}}
+@keyframes tdot{0%,80%,100%{transform:scale(.6);opacity:.28}40%{transform:scale(1);opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes cardpop{from{opacity:0;transform:scale(.9) translateY(14px)}to{opacity:1;transform:none}}
+
+
+#login{flex-direction:column;align-items:center;justify-content:center;padding:2.2rem 1.5rem}
+.ll{margin-bottom:1.5rem;animation:rise .8s .04s both}
+.ll svg{animation:floatY 5.5s ease-in-out infinite,glo 4.5s ease-in-out infinite}
+.l-eye{font-size:.56rem;font-weight:600;letter-spacing:.28em;text-transform:uppercase;
+  color:#E8690A;margin-bottom:.9rem;animation:up .6s .22s both}
+.l-title{font-family:'Playfair Display',serif;font-size:clamp(1.2rem,3vw,1.85rem);font-weight:700;
+  text-align:center;line-height:1.22;max-width:660px;margin-bottom:.65rem;animation:up .7s .3s both}
+.l-motto{font-family:'Dancing Script',cursive;font-size:1.1rem;color:#F0C040;letter-spacing:.05em;
+  margin-bottom:2.5rem;animation:up .6s .38s both}
+.l-sub{font-size:.6rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--tx3);margin-bottom:1.2rem;animation:up .6s .44s both}
+.role-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.85rem;width:100%;max-width:720px;
+  animation:up .7s .5s both}
+.rc{background:var(--card);border:1px solid var(--bd);border-radius:15px;
+  padding:1.65rem 1.4rem 1.4rem;cursor:pointer;
+  transition:transform .22s,box-shadow .22s,border-color .22s,background .2s;
+  position:relative;overflow:hidden;text-align:left}
+.rc:hover{transform:translateY(-5px);background:var(--card2);border-color:rgba(255,255,255,.17)}
+.rc[data-r=scholar]:hover{box-shadow:0 18px 44px rgba(43,108,176,.3)}
+.rc[data-r=educator]:hover{box-shadow:0 18px 44px rgba(232,105,10,.3)}
+.rc[data-r=leadership]:hover{box-shadow:0 18px 44px rgba(212,175,55,.26)}
+.rc-bar{position:absolute;left:0;top:0;bottom:0;width:3.5px}
+.rc[data-r=scholar] .rc-bar{background:#2b6cb0}
+.rc[data-r=educator] .rc-bar{background:#E8690A}
+.rc[data-r=leadership] .rc-bar{background:#D4AF37}
+.rc-nm{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;
+  margin-bottom:.25rem;line-height:1.2;margin-top:.1rem}
+.rc-sub{font-size:.67rem;color:var(--tx3);line-height:1.4}
+.rc-arr{position:absolute;bottom:1.1rem;right:1.1rem;font-size:.75rem;color:var(--tx3);
+  transition:transform .2s,color .2s}
+.rc:hover .rc-arr{transform:translate(3px,-3px);color:var(--tx2)}
+
+
+#codemod{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(14px);
+  z-index:900;display:none;align-items:center;justify-content:center;padding:1rem}
+#codemod.on{display:flex}
+.cbox{background:#0C1525;border:1px solid rgba(255,255,255,.14);border-radius:22px;
+  padding:2.3rem 2.2rem;width:100%;max-width:380px;
+  animation:cardpop .32s cubic-bezier(.34,1.56,.64,1) both;position:relative}
+.cm-tag{font-size:.57rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ac);margin-bottom:.6rem;transition:color .4s}
+.cm-t{font-family:'Playfair Display',serif;font-size:1.26rem;font-weight:700;margin-bottom:.3rem}
+.cm-s{font-size:.74rem;color:var(--tx2);margin-bottom:1.35rem;line-height:1.55}
+.cm-x{position:absolute;top:1rem;right:1.2rem;background:none;border:none;color:var(--tx3);
+  font-size:1rem;cursor:pointer;transition:color .15s;padding:.3rem}
+.cm-x:hover{color:var(--tx)}
+.cm-in{width:100%;background:var(--card2);border:1px solid var(--bd);border-radius:10px;
+  padding:.82rem 1rem;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;
+  color:var(--tx);letter-spacing:.14em;outline:none;
+  transition:border-color .2s,box-shadow .2s;margin-bottom:.8rem;text-transform:uppercase}
+.cm-in:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acb)}
+.cm-in::placeholder{letter-spacing:.04em;color:var(--tx3)}
+.cm-btn{width:100%;padding:.84rem;background:var(--ac);border:none;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;color:#fff;cursor:pointer;
+  transition:filter .15s,transform .12s}
+.cm-btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.cm-err{font-size:.71rem;color:#ff6b6b;margin-top:.52rem;display:none;text-align:center}
+.cm-hint{font-size:.62rem;color:var(--tx3);text-align:center;margin-top:.5rem}
+
+
+#portal{flex-direction:column}
+.pnav{position:sticky;top:0;z-index:200;display:flex;align-items:center;
+  justify-content:space-between;padding:.82rem 1.9rem;
+  background:rgba(6,9,26,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd)}
+.pnl{display:flex;align-items:center;gap:.9rem}
+.pnl svg{width:26px;height:26px;flex-shrink:0}
+.pbadge{font-size:.58rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  padding:.22rem .72rem;border-radius:50px;border:1px solid var(--ac);
+  color:var(--ac);background:var(--acb);transition:all .5s}
+.pnr{display:flex;align-items:center;gap:.95rem}
+.outnav{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:.71rem;
+  font-weight:500;color:var(--tx3);cursor:pointer;transition:color .15s;padding:.3rem}
+.outnav:hover{color:var(--tx)}
+.pc{flex:1;max-width:1060px;width:100%;margin:0 auto;padding:2.2rem 1.9rem 4rem}
+
+
+#gridv{animation:up .4s both}
+.gh{margin-bottom:2.5rem}
+.gh-eye{font-size:.57rem;font-weight:600;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--ac);margin-bottom:.7rem;transition:color .4s}
+.gh-title{font-family:'Playfair Display',serif;font-size:clamp(1.65rem,3.5vw,2.4rem);
+  font-weight:700;line-height:1.1;margin-bottom:.58rem;letter-spacing:-.02em;white-space:pre-line}
+.gh-sub{font-size:.84rem;color:var(--tx2);max-width:445px;line-height:1.65}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:.95rem}
+.tc{background:var(--card);border:1px solid var(--bd);border-radius:15px;
+  padding:1.7rem 1.5rem 1.45rem;cursor:pointer;
+  position:relative;overflow:hidden;opacity:.88;
+  transition:transform .22s,box-shadow .22s,border-color .22s,background .2s,opacity .2s}
+.tc:hover{transform:translateY(-4px);background:var(--card2);border-color:rgba(255,255,255,.17);opacity:1}
+.tc-n{position:absolute;top:.85rem;right:1.2rem;font-family:'Playfair Display',serif;
+  font-size:3.2rem;font-weight:900;color:rgba(255,255,255,.03);user-select:none}
+.tc-nm{font-family:'Playfair Display',serif;font-size:1.06rem;font-weight:700;
+  margin-bottom:.35rem;letter-spacing:-.01em}
+.tc-tag{font-size:.73rem;color:var(--tx2);line-height:1.55;margin-bottom:1.2rem}
+.tc-cta{font-size:.63rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ac);display:flex;align-items:center;gap:.35rem}
+.tc-cta::after{content:'→';transition:transform .2s}
+.tc:hover .tc-cta::after{transform:translateX(4px)}
+
+
+#toolv{display:none;animation:up .34s both}
+#toolv.on{display:block}
+.tv-back{display:inline-flex;align-items:center;gap:.48rem;background:none;border:none;
+  font-family:'DM Sans',sans-serif;font-size:.66rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--tx3);cursor:pointer;transition:color .15s;
+  margin-bottom:1.8rem;padding:0}
+.tv-back:hover{color:var(--tx)}
+.tv-head{margin-bottom:1.95rem}
+.tv-nm{font-family:'Playfair Display',serif;font-size:clamp(1.45rem,2.8vw,2rem);
+  font-weight:700;margin-bottom:.42rem;letter-spacing:-.02em}
+.tv-desc{font-size:.84rem;color:var(--tx2);max-width:500px;line-height:1.65}
+.tv-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.28rem;align-items:start}
+.tform{background:var(--card);border:1px solid var(--bd);border-radius:15px;padding:1.5rem}
+.fg{margin-bottom:.88rem}
+.fl{display:block;font-size:.59rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tx3);margin-bottom:.35rem}
+.fi,.fsel,.fta{width:100%;background:var(--card2);border:1px solid var(--bd);border-radius:9px;
+  padding:.7rem .9rem;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--tx);
+  outline:none;transition:border-color .2s,box-shadow .2s}
+.fi::placeholder,.fta::placeholder{color:var(--tx3)}
+.fi:focus,.fsel:focus,.fta:focus{border-color:var(--ac);box-shadow:0 0 0 3px var(--acb)}
+.fsel{appearance:none;cursor:pointer}
+.fsel option{background:#0e1628}
+.fta{resize:vertical;min-height:76px;line-height:1.55}
+.genbtn{width:100%;padding:.86rem;background:var(--ac);border:none;border-radius:10px;
+  font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  gap:.5rem;margin-top:.3rem;letter-spacing:.03em;opacity:.42;cursor:not-allowed}
+.tout{background:var(--card);border:1px solid var(--bd);border-radius:15px;
+  padding:1.5rem;min-height:215px;display:flex;flex-direction:column}
+.out-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:.5rem;min-height:175px}
+.oe-mark{width:28px;height:2px;background:var(--ac);border-radius:2px;opacity:.35;margin:0 auto}
+.oe-tx{font-size:.73rem;color:var(--tx3);line-height:1.65;max-width:220px;margin-top:.5rem}
+.coming-badge{display:inline-flex;align-items:center;gap:.4rem;
+  font-size:.59rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ac);border:1px solid var(--acb);border-radius:50px;
+  padding:.3rem .82rem;margin-top:.55rem;background:var(--acb)}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+@media(max-width:760px){.tg,.tv-cols{grid-template-columns:1fr}.role-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<canvas id="bgc"></canvas>
+<div class="glow"></div>
+
+
+<div id="login" class="scr on">
+  <div class="ll">
+    <svg viewBox="0 0 220 220" width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="20,81 110,15 97,92 89,117"  fill="#E8690A" stroke="white" stroke-width="2.2" stroke-linejoin="round"/>
+      <polygon points="110,15 200,81 123,92 97,92"  fill="#C0392B" stroke="white" stroke-width="2.2" stroke-linejoin="round"/>
+      <polygon points="200,81 166,187 131,117 123,92" fill="#2B85C2" stroke="white" stroke-width="2.2" stroke-linejoin="round"/>
+      <polygon points="166,187 54,187 110,132 131,117" fill="#3DB54A" stroke="white" stroke-width="2.2" stroke-linejoin="round"/>
+      <polygon points="54,187 20,81 89,117 110,132"  fill="#F5C518" stroke="white" stroke-width="2.2" stroke-linejoin="round"/>
+      <circle cx="110" cy="110" r="14" fill="white"/>
+      <text x="65" y="80" font-family="Georgia,serif" font-size="28" fill="white" text-anchor="middle" font-weight="bold" opacity=".95">π</text>
+      <g transform="translate(148,56)" opacity=".92">
+        <ellipse cx="0" cy="1" rx="15" ry="12" fill="none" stroke="white" stroke-width="2.2"/>
+        <circle cx="5" cy="5" r="3.5" fill="white"/>
+        <circle cx="-9" cy="-3" r="2.6" fill="white"/>
+        <circle cx="-5" cy="-10" r="2.6" fill="white"/>
+        <circle cx="4" cy="-11" r="2.6" fill="white"/>
+        <circle cx="12" cy="-5" r="2.6" fill="white"/>
+      </g>
+      <g transform="translate(169,118)" fill="none" stroke="white" stroke-width="1.7" opacity=".92">
+        <rect x="-13" y="-11" width="26" height="22" rx="2.5" stroke-width="2"/>
+        <line x1="-6" y1="-11" x2="-6" y2="11"/>
+        <line x1="6"  y1="-11" x2="6"  y2="11"/>
+        <line x1="-13" y1="-3" x2="13" y2="-3"/>
+        <line x1="-13" y1="5"  x2="13" y2="5"/>
+        <circle cx="-6" cy="-3" r="2.2" fill="white" stroke="none"/>
+        <circle cx="6"  cy="-3" r="2.2" fill="white" stroke="none"/>
+        <circle cx="-6" cy="5"  r="2.2" fill="white" stroke="none"/>
+        <circle cx="6"  cy="5"  r="2.2" fill="white" stroke="none"/>
+        <circle cx="0"  cy="1"  r="2.6" fill="white" stroke="none"/>
+      </g>
+      <g transform="translate(106,167)" opacity=".92">
+        <rect x="-2.4" y="-15" width="4.8" height="5.5" rx="1.2" fill="white"/>
+        <rect x="-2.4" y="-15" width="4.8" height="5.5" rx="1.2" fill="white" transform="rotate(45)"/>
+        <rect x="-2.4" y="-15" width="4.8" height="5.5" rx="1.2" fill="white" transform="rotate(90)"/>
+        <rect x="-2.4" y="-15" width="4.8" height="5.5" rx="1.2" fill="white" transform="rotate(135)"/>
+        <rect x="-2.4" y="-15" width="4.8" height="5.5" rx="1.2" fill="white" transform="rotate(180)"/>
+        <rect x="-2.4" y="-15" width="4.8" height="5.5" rx="1.2" fill="white" transform="rotate(225)"/>
+        <rect x="-2.4" y="-15" width="4.8" height="5.5" rx="1.2" fill="white" transform="rotate(270)"/>
+        <rect x="-2.4" y="-15" width="4.8" height="5.5" rx="1.2" fill="white" transform="rotate(315)"/>
+        <circle r="9.5" fill="white"/>
+        <circle r="3.8" fill="#3DB54A"/>
+      </g>
+      <g transform="translate(51,142)" fill="none" stroke="white" stroke-width="2.2" stroke-linejoin="round" opacity=".92">
+        <path d="M-4,-14 L-4,-5 L-14,11 L14,11 L4,-5 L4,-14 Z"/>
+        <line x1="-4" y1="-14" x2="4" y2="-14"/>
+        <path d="M-11,4 L11,4 L14,11 L-14,11 Z" fill="white" stroke="none"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="l-eye">TMSA Public Charter Schools</div>
+  <h1 class="l-title">Thoughtful, Human-Centered Tools for<br>Teaching, Learning, and Leadership</h1>
+  <p class="l-motto">Science · Wisdom · Peace</p>
+  <p class="l-sub">Choose Your Portal to Continue</p>
+
+  <div class="role-grid">
+    <div class="rc" data-r="educator" onclick="openModal('educator')">
+      <div class="rc-bar"></div>
+      <div class="rc-nm">Center for Professional Learning</div>
+      <div class="rc-sub">Educator Portal</div>
+      <div class="rc-arr">+</div>
+    </div>
+    <div class="rc" data-r="scholar" onclick="openModal('scholar')">
+      <div class="rc-bar"></div>
+      <div class="rc-nm">Center for Academic Excellence</div>
+      <div class="rc-sub">Student Portal</div>
+      <div class="rc-arr">+</div>
+    </div>
+    <div class="rc" data-r="leadership" onclick="openModal('leadership')">
+      <div class="rc-bar"></div>
+      <div class="rc-nm">Center for Administrative Leadership</div>
+      <div class="rc-sub">Leadership Portal</div>
+      <div class="rc-arr">+</div>
+    </div>
+  </div>
+</div>
+
+
+<div id="codemod">
+  <div class="cbox">
+    <button class="cm-x" onclick="closeModal()">x</button>
+    <div class="cm-tag" id="cm-tag">CENTER FOR ACADEMIC EXCELLENCE</div>
+    <h2 class="cm-t" id="cm-title">Center for Academic Excellence</h2>
+    <p class="cm-s">Please enter your access code to continue.</p>
+    <input class="cm-in" id="cmin" type="password" placeholder="ACCESS CODE" autocomplete="off"/>
+    <button class="cm-btn" onclick="tryLogin()">Access Portal</button>
+    <div class="cm-err" id="cm-err">Incorrect code. Please try again.</div>
+    <div class="cm-hint" id="cm-hint"></div>
+  </div>
+</div>
+
+
+<div id="portal" class="scr">
+  <nav class="pnav">
+    <div class="pnl">
+      <svg viewBox="0 0 220 220" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="20,81 110,15 97,92 89,117"   fill="#E8690A"/>
+        <polygon points="110,15 200,81 123,92 97,92"   fill="#C0392B"/>
+        <polygon points="200,81 166,187 131,117 123,92" fill="#2B85C2"/>
+        <polygon points="166,187 54,187 110,132 131,117" fill="#3DB54A"/>
+        <polygon points="54,187 20,81 89,117 110,132"   fill="#F5C518"/>
+        <circle cx="110" cy="110" r="13" fill="white"/>
+      </svg>
+      <span class="pbadge" id="pbadge">CENTER FOR ACADEMIC EXCELLENCE</span>
+    </div>
+    <div class="pnr">
+      <button class="outnav" onclick="signOut()">Sign Out</button>
+    </div>
+  </nav>
+  <div class="pc">
+    <div id="gridv">
+      <div class="gh">
+        <div class="gh-eye" id="gh-eye">Available Tools</div>
+        <h2 class="gh-title" id="gh-title">Begin with the end in mind.</h2>
+        <p class="gh-sub" id="gh-sub"></p>
+      </div>
+      <div class="tg" id="tg"></div>
+    </div>
+    <div id="toolv">
+      <button class="tv-back" onclick="showGrid()">← Back to All Tools</button>
+      <div class="tv-head">
+        <h2 class="tv-nm" id="tv-nm"></h2>
+        <p class="tv-desc" id="tv-desc"></p>
+      </div>
+      <div class="tv-cols">
+        <div class="tform" id="tform"></div>
+        <div class="tout" id="tout">
+          <div class="out-empty" id="out-empty">
+            <div class="oe-mark"></div>
+            <div class="oe-tx">Complete the fields on the left and select Submit. Your result will appear here.</div>
+            <div class="coming-badge">Coming Soon</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const CODES={scholar:'SCHOLAR25',educator:'TEACH25',leadership:'LEAD25'};
+const HINTS={scholar:'Access code: <b>SCHOLAR25</b>',educator:'Access code: <b>TEACH25</b>',leadership:'Access code: <b>LEAD25</b>'};
+const ACCENT={
+  scholar:{hex:'#2b6cb0',rgb:'43,108,176',badge:'CENTER FOR ACADEMIC EXCELLENCE',label:'Center for Academic Excellence',chat:'Academic Advisor',role:'Your Academic Support Partner'},
+  educator:{hex:'#E8690A',rgb:'232,105,10',badge:'CENTER FOR PROFESSIONAL LEARNING',label:'Center for Professional Learning',chat:'Instructional Advisor',role:'Your Instructional Support Partner'},
+  leadership:{hex:'#D4AF37',rgb:'212,175,55',badge:'CENTER FOR ADMINISTRATIVE LEADERSHIP',label:'Center for Administrative Leadership',chat:'Leadership Advisor',role:'Your Strategic Support Partner'}
+};
+const GRID={
+  scholar:{eye:'Your Academic Toolkit',title:'Begin with the end in mind.\nLead your own learning.',sub:'Four tools grounded in Leader in Me principles, designed to strengthen your academic skills and develop the leader within you.'},
+  educator:{eye:'Your Educator Toolkit',title:'Invest in your craft.\nElevate every learner.',sub:'Four tools built to support lesson planning, instructional design, and professional practice across every subject, grade level, and classroom context.'},
+  leadership:{eye:'Your Leadership Toolkit',title:'Synergize your vision\nwith your community.',sub:'Four tools designed to support school leaders and central office administrators in building stronger systems, developing people, and driving meaningful results.'}
+};
+
+const TOOLS={
+scholar:[
+  {id:'test-prep',name:'Standardized Exam Preparation Studio',tag:'Personalized preparation for SAT, ACT, AP, EOG, and EOC exams',desc:'A structured preparation resource for any standardized exam, covering key content areas, proven strategies, and a study plan tailored to your timeline and goals.',fields:[{id:'test',type:'sel',label:'Examination',opts:['SAT (Scholastic Assessment Test)','ACT (American College Testing)','PSAT / NMSQT','AP Examination (specify subject below)','NC EOG (End of Grade Assessment)','NC EOC (End of Course Assessment)']},{id:'subject',type:'text',label:'Subject or AP course',ph:'AP United States History, AP Calculus AB, NC Math 1, NC Biology, English Language Arts'},{id:'focus',type:'sel',label:'Preparation focus',opts:['Targeted practice questions with detailed explanations','Examination strategy guide for this assessment','A complete personalized study plan','Section-specific content review','Summary of the highest-yield concepts and skills']},{id:'level',type:'sel',label:'Current preparation level',opts:['Beginning preparation with no prior study','Some preparation completed and ready to advance','Strong foundation with specific areas needing attention','Targeting a top score or merit scholarship threshold']},{id:'timeline',type:'sel',label:'Time remaining until examination',opts:['Less than two weeks','Two to four weeks','Five to eight weeks','Nine to twelve weeks','More than three months']}]},
+  {id:'lim-notebook',name:'Leadership Notebook and Weekly Planner',tag:'Plan your week with purpose using the 7 Habits and Lighthouse Goals',desc:'Write a weekly Leadership Notebook grounded in the 7 Habits of Highly Effective People. Set clear Lighthouse Goals, map out your week day by day, and plan how you will Sharpen the Saw.',fields:[{id:'mission',type:'text',label:'Personal mission statement',ph:'To be a trustworthy leader who works hard, lifts others up, and makes a meaningful difference every day'},{id:'goals',type:'ta',label:'Lighthouse Goals for this week',ph:'Score above 85 on the algebra assessment. Complete the research paper draft. Be fully present at every practice this week.'},{id:'habit',type:'sel',label:'7 Habit to develop this week',opts:['Habit 1: Be Proactive. I choose my response.','Habit 2: Begin with the End in Mind. I have a clear plan.','Habit 3: Put First Things First. I focus on what matters most.','Habit 4: Think Win-Win. I want everyone to succeed.','Habit 5: Seek First to Understand. I listen before I speak.','Habit 6: Synergize. Together we create better results.','Habit 7: Sharpen the Saw. I renew myself so I can serve others.']},{id:'challenge',type:'text',label:'Most significant challenge this week (optional)',ph:'Procrastinating on large assignments, managing anxiety before the test, balancing multiple commitments'},{id:'saw',type:'sel',label:'Sharpen the Saw renewal dimension this week (Habit 7)',opts:['Physical: Exercise, sleep, and nutrition','Mental: Reading, learning, and intellectual growth','Social and Emotional: Investing in meaningful relationships','Spiritual: Reflection, journaling, and gratitude','Service: Contributing something meaningful to others']}]},
+  {id:'practice-studio',name:'Practice and Assessment Studio',tag:'Custom practice sets with complete, worked answer keys',desc:'A targeted practice resource for any subject and skill level. Every set includes a fully worked answer key so students can review their reasoning and build genuine mastery.',fields:[{id:'topic',type:'text',label:'Topic or skill to practice',ph:'Solving quadratic equations, the stages of mitosis, causes of World War I, rhetorical devices in persuasive writing'},{id:'subject',type:'sel',label:'Subject area',opts:['Mathematics','Science','English Language Arts','Social Studies and History','Foreign Language','Other']},{id:'level',type:'sel',label:'Cognitive challenge level',opts:['Basic recall and vocabulary','Conceptual application','Analysis and critical thinking','Advanced and AP-level challenge']},{id:'count',type:'sel',label:'Number of questions',opts:['Three questions','Five questions','Eight questions','Ten questions']},{id:'format',type:'sel',label:'Question format',opts:['Short answer','Multiple choice with answer rationale','Problem solving with all work shown','Mixed formats']}]},
+  {id:'presentation-coach',name:'Presentation and Public Speaking Coach',tag:'Build a complete speaking plan and present with confidence',desc:'Get a structured speaking framework for any presentation, speech, report, or project defense. Grounded in Leader in Me principles, this tool helps you organize your ideas and present with confidence.',fields:[{id:'topic',type:'text',label:'Presentation topic or assignment',ph:'AP History oral report, science fair project presentation, student leadership speech, debate argument'},{id:'duration',type:'sel',label:'Time allotment',opts:['One to two minutes','Three to five minutes','Five to eight minutes','Ten or more minutes','No specified time limit']},{id:'audience',type:'sel',label:'Audience',opts:['Class peers','Teacher or evaluator only','Panel of judges','Parents and community members','School assembly','Virtual or recorded presentation']},{id:'need',type:'sel',label:'Primary need',opts:['A complete outline to develop','A compelling and original opening','Effective transitions and structural flow','Strategies for managing nervousness and building confidence','A powerful and memorable conclusion']}]}
+],
+educator:[
+  {id:'diff-engine',name:'Differentiated Instruction Engine',tag:'Three ready-to-use instructional tiers from any lesson activity',desc:'Paste any lesson activity, reading passage, question set, or task and receive three fully differentiated versions with practical teacher notes. Every student is reached and no ceiling is set.',fields:[{id:'content',type:'ta',label:'Activity, task, or text to differentiate',ph:'Paste a lesson activity, question set, reading passage, worksheet, or instructional task here.'},{id:'subject',type:'text',label:'Subject and grade level',ph:'Tenth Grade Biology, Seventh Grade Mathematics, Ninth Grade English Language Arts'},{id:'grade',type:'sel',label:'Grade band',opts:['Elementary (K through 5)','Middle School (6 through 8)','High School (9 through 12)']},{id:'focus',type:'sel',label:'Differentiation approach',opts:['Reading complexity and text scaffolding','Task complexity and Depth of Knowledge','ELL language supports and sentence frames','IEP and 504 modifications for access','Gifted and advanced extension and enrichment']}]},
+  {id:'standard-unpacker',name:'NC Standard Unpacking Tool',tag:'Go from any NC Standard to a complete classroom-ready framework',desc:'Paste any North Carolina Standard and get everything you need to start teaching: clear learning targets, essential questions, key vocabulary, common misconceptions, and assessment ideas. Leader in Me connections available on request.',fields:[{id:'standard',type:'ta',label:'NC Standard code and full text',ph:'NC.M2.A-APR.1: Understand that polynomials form a system analogous to the integers...'},{id:'subject',type:'text',label:'Subject area',ph:'Mathematics, Science, English Language Arts, Social Studies, Career and Technical Education'},{id:'grade',type:'text',label:'Grade level',ph:'7th, 9th, 10th, 11th and 12th'},{id:'depth',type:'sel',label:'Depth of unpacking',opts:['Focused: Learning targets and academic vocabulary only','Standard: Includes misconceptions and assessment recommendations','Comprehensive: Includes UDL considerations and Leader in Me connections']}]},
+  {id:'lesson-design',name:'Lesson Design Laboratory',tag:'Complete, NC Standards-aligned lesson plans ready to teach',desc:'A complete lesson planning resource that produces a standards-aligned plan with a Leader in Me connection, differentiation notes for your classroom context, and a written exit ticket.',fields:[{id:'subject',type:'text',label:'Subject and grade level',ph:'Tenth Grade Biology, Eighth Grade English Language Arts, Ninth Grade Algebra I'},{id:'standard',type:'text',label:'NC Standard or learning objective',ph:'NC.Bio.2.2.1: Students will explain how DNA encodes information for protein synthesis'},{id:'duration',type:'sel',label:'Class duration',opts:['45 minutes','60 minutes','90 minutes block schedule']},{id:'strategy',type:'sel',label:'Instructional strategy',opts:['Direct instruction with guided practice','Inquiry-based learning','Collaborative and jigsaw','Project-based learning launch','Socratic seminar','Flipped classroom review']},{id:'diff',type:'sel',label:'Classroom context',opts:['General education','Inclusion with mixed IEP and 504','English Language Learner supports required','Advanced or honors designation','Full differentiation across multiple levels']}]},
+  {id:'review-game',name:'Review Activity Builder',tag:'Engaging review activities ready to run in any classroom',desc:'A review activity resource for any subject and topic. Choose from multiple formats including structured question sets, category-based review, Quiz Bowl rounds, exit assessments, and team challenges.',fields:[{id:'subject',type:'text',label:'Subject and topic for review',ph:'Algebra II: Quadratic Equations, Biology: Genetics and Heredity, United States History: The Reconstruction Era'},{id:'grade',type:'sel',label:'Grade level',opts:['Elementary (K through 5)','Middle School (6 through 8)','High School (9 through 12)','AP and Advanced']},{id:'format',type:'sel',label:'Activity format',opts:['Structured multiple choice with answer rationale (Kahoot-compatible)','Category-based review with point values (Jeopardy-style)','Toss-up and bonus question rounds (Quiz Bowl format)','Five-question formative exit assessment','Four Corners collaborative discussion protocol','Mixed-format team challenge with bonus rounds']},{id:'count',type:'sel',label:'Size of question set',opts:['Five questions','Ten questions','Fifteen questions','Twenty or more questions']},{id:'level',type:'sel',label:'Cognitive demand level',opts:['Basic recall and recognition','Conceptual understanding','Application','Analysis and evaluation','Mixed and scaffolded from foundational to advanced']}]}
+],
+leadership:[
+  {id:'policy-architect',name:'Policy Development Tool',tag:'NC DPI-aligned policy drafts ready for board and legal review',desc:'A professionally structured policy resource aligned to NC DPI charter school requirements. Every draft includes purpose, definitions, procedures, legal references, and a recommended review cycle for counsel and board consideration.',fields:[{id:'topic',type:'text',label:'Policy subject',ph:'Technology Acceptable Use Policy, Student Device Policy, Data Privacy and Security, Social Media Use, Attendance and Truancy'},{id:'type',type:'sel',label:'Policy category',opts:['Technology and Acceptable Use (AI, devices, and internet)','Student Data Privacy and FERPA','Student Code of Conduct','Anti-Bullying and Harassment','Attendance, Tardy, and Truancy','Family Engagement and Rights','Staff Conduct and Professional Standards','Special Education Procedures','Crisis Management and Safety']},{id:'scope',type:'sel',label:'Organizational scope',opts:['Elementary School (K through 5)','Middle School (6 through 8)','High School (9 through 12)','K through 12 Charter School','Multi-campus Charter Network']},{id:'context',type:'ta',label:'Specific requirements or contextual notes (optional)',ph:'Board has requested specific language on AI use. Policy must align with Senate Bill 49. State guidance was updated in 2024.'}]},
+  {id:'pd-designer',name:'Professional Development Session Designer',tag:'Facilitation-ready PD sessions that move practice forward',desc:'A complete professional development resource with clear objectives, a detailed agenda, structured activities, discussion protocols, and a follow-up accountability plan.',fields:[{id:'topic',type:'text',label:'Professional development topic or initiative',ph:'Integrating Technology Responsibly in the Classroom, Leader in Me Habit Deep Dive, Data-Driven Instructional Planning'},{id:'audience',type:'sel',label:'Participant audience',opts:['All teaching staff','New teacher cohort and onboarding','Department or grade-level team','School leadership team','All staff including instructional and support','Instructional coaches and lead teachers']},{id:'duration',type:'sel',label:'Session duration',opts:['30 minutes (professional learning community)','45 minutes','One hour','Two hours','Half day (3.5 hours)','Full day (6 hours)']},{id:'format',type:'sel',label:'Session format',opts:['Workshop with structured activities','PLC data analysis and collaborative planning','Technology skill development','Leader in Me Habit deep dive facilitation','Coaching cycle launch','Text-based professional study']},{id:'context',type:'text',label:'School initiative or contextual notes (optional)',ph:'Year two of Leader in Me implementation, preparing for NC DPI visit, launching new technology initiative'}]},
+  {id:'grant-studio',name:'Grant Narrative Studio',tag:'Polished grant narrative sections aligned to your mission and funder priorities',desc:"Draft compelling grant narrative sections for any funding opportunity. Each section is written to communicate your school's mission clearly, align to the funder's priorities, and make a strong case for your students and community.",fields:[{id:'project',type:'ta',label:'Project or initiative description',ph:'Launch a STEM laboratory serving 400 students, featuring 30 workstations, project-based curriculum, and three years of embedded teacher development and coaching.'},{id:'population',type:'text',label:'Target student population and demographics',ph:'420 K-12 charter school students; 63 percent qualify for free and reduced lunch; 14 percent with exceptionalities; 8 percent English Learners'},{id:'funder',type:'sel',label:'Grant type and funder category',opts:['Title I: Academic Achievement','Title II: Educator Quality','Title III: English Learners','Title IV: Student Support and Academic Enrichment','State Charter Innovation Grant','STEM and STEAM Foundation Grant','Technology and Digital Equity','Family and Community Engagement','Leader in Me and Character and Leadership Education','Mental Health and Student Wellness','Corporate and Foundation General Grant']},{id:'section',type:'sel',label:'Section to develop',opts:['Needs Statement and Problem of Practice','Project Description and Activities','Goals, Objectives, and Measurable Outcomes','Evaluation and Data Plan','Sustainability Plan','Budget Narrative','Executive Summary']}]},
+  {id:'sip-builder',name:'School Improvement Plan Builder',tag:'Any SIP section, NC DPI-aligned and ready to submit',desc:"Draft any section of your School Improvement Plan aligned to NC DPI standards and Leader in Me Lighthouse Certification criteria. Save significant writing time while producing documentation that truly reflects the depth of your school's strategic work.",fields:[{id:'section',type:'sel',label:'SIP section to develop',opts:['Needs Assessment Summary and Root Cause Analysis','Measurable Goal Statement and Rationale','Action Steps and Implementation Timeline','Professional Development Goal and Plan','Family and Community Engagement Strategy','Progress Monitoring and Mid-Year Review Plan','Leadership Development and Succession Planning']},{id:'priority',type:'text',label:'Priority area or strategic focus',ph:'Third grade reading proficiency, ninth grade mathematics performance, chronic absenteeism reduction, Leader in Me Year 3 implementation'},{id:'context',type:'ta',label:'School context (general information only, no personal data)',ph:'Title I K through 8 charter school, 420 students, 63 percent free and reduced lunch, Year 2 Leader in Me, EOG proficiency at 68 percent, serving a diverse urban community'},{id:'align',type:'sel',label:'Strategic alignment framework',opts:['NC State Board of Education Strategic Plan','NC DPI Charter School Accountability Standards','Leader in Me Lighthouse Certification Criteria','NC Principal Evaluation Standards','School-Developed Strategic Plan Framework']}]}
+]
+};
+
+let PORTAL='',TOOL_ID='';
+
+(function(){
+  const cv=document.getElementById('bgc'),cx=cv.getContext('2d');
+  function rsz(){cv.width=innerWidth;cv.height=innerHeight}rsz();
+  window.addEventListener('resize',rsz);
+  const pts=Array.from({length:120},()=>({
+    x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+    r:Math.random()*2.2+.8,
+    dx:(Math.random()-.5)*.12,dy:(Math.random()-.5)*.12,
+    a:Math.random()*.7+.3,
+    twinkleSpeed:Math.random()*.04+.01,
+    twinkleOffset:Math.random()*Math.PI*2,
+    type:Math.random()<.3?'star':'dot'
+  }));
+  function drawStar(x,y,r,alpha){
+    cx.save();cx.translate(x,y);
+    cx.strokeStyle=`rgba(255,255,255,${alpha})`;
+    cx.lineWidth=r*.8;
+    cx.beginPath();cx.moveTo(-r*2.4,0);cx.lineTo(r*2.4,0);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-r*2.4);cx.lineTo(0,r*2.4);cx.stroke();
+    cx.fillStyle=`rgba(255,255,255,${alpha})`;
+    cx.beginPath();cx.arc(0,0,r,0,Math.PI*2);cx.fill();
+    cx.restore();
+  }
+  let t=0;
+  (function draw(){
+    t+=1;
+    cx.clearRect(0,0,cv.width,cv.height);
+    pts.forEach(p=>{
+      p.x+=p.dx;p.y+=p.dy;
+      if(p.x<0)p.x=cv.width;if(p.x>cv.width)p.x=0;
+      if(p.y<0)p.y=cv.height;if(p.y>cv.height)p.y=0;
+      const twinkle=p.a*(0.45+0.55*(Math.sin(t*p.twinkleSpeed+p.twinkleOffset)*.5+.5));
+      if(p.type==='star'){
+        drawStar(p.x,p.y,p.r,twinkle);
+      } else {
+        cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        cx.fillStyle=`rgba(255,255,255,${twinkle})`;cx.fill();
+      }
+    });requestAnimationFrame(draw);
+  })();
+})();
+
+function fadeToScr(id){
+  const cur=document.querySelector('.scr.on');
+  if(cur){cur.style.transition='opacity .38s';cur.style.opacity='0';}
+  setTimeout(()=>{
+    document.querySelectorAll('.scr').forEach(s=>{s.classList.remove('on');s.style.opacity='';});
+    const next=document.getElementById(id);
+    next.style.opacity='0';next.classList.add('on');
+    next.style.transition='opacity .38s';
+    requestAnimationFrame(()=>next.style.opacity='1');
+  },cur?400:0);
+}
+
+function setAccent(role){
+  const a=ACCENT[role];
+  document.documentElement.style.setProperty('--ac',a.hex);
+  document.documentElement.style.setProperty('--acg',`rgba(${a.rgb},.18)`);
+  document.documentElement.style.setProperty('--acb',`rgba(${a.rgb},.13)`);
+}
+function resetAccent(){
+  document.documentElement.style.setProperty('--ac','#2b6cb0');
+  document.documentElement.style.setProperty('--acg','rgba(43,108,176,.18)');
+  document.documentElement.style.setProperty('--acb','rgba(43,108,176,.13)');
+}
+
+function openModal(role){
+  PORTAL=role;setAccent(role);
+  const a=ACCENT[role];
+  document.getElementById('cm-tag').textContent='TMSA PUBLIC CHARTER SCHOOLS';
+  document.getElementById('cm-title').textContent=a.label;
+  document.getElementById('cm-hint').innerHTML=HINTS[role];
+  document.getElementById('cm-err').style.display='none';
+  document.getElementById('cmin').value='';
+  document.getElementById('codemod').classList.add('on');
+  setTimeout(()=>document.getElementById('cmin').focus(),180);
+}
+function closeModal(){document.getElementById('codemod').classList.remove('on');}
+document.getElementById('cmin').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
+
+function tryLogin(){
+  const v=document.getElementById('cmin').value.trim().toUpperCase();
+  if(v!==CODES[PORTAL].toUpperCase()){
+    document.getElementById('cm-err').style.display='block';
+    document.getElementById('cmin').value='';return;
+  }
+  document.getElementById('cm-err').style.display='none';
+  document.getElementById('codemod').classList.remove('on');
+  buildPortal(PORTAL);
+  fadeToScr('portal');
+}
+
+function buildPortal(role){
+  setAccent(role);
+  const a=ACCENT[role],gt=GRID[role];
+  document.getElementById('pbadge').textContent=a.badge;
+  document.getElementById('gh-eye').textContent=gt.eye;
+  document.getElementById('gh-title').textContent=gt.title;
+  document.getElementById('gh-sub').textContent=gt.sub;
+  document.getElementById('tg').innerHTML=TOOLS[role].map((t,i)=>`
+    <div class="tc" onclick="showTool('${t.id}')">
+      <div class="tc-n">${String(i+1).padStart(2,'0')}</div>
+      <div class="tc-nm">${t.name}</div>
+      <div class="tc-tag">${t.tag}</div>
+      <div class="tc-cta">Open Tool</div>
+    </div>`).join('');
+  showGrid();
+}
+
+function showGrid(){
+  document.getElementById('gridv').style.display='';
+  document.getElementById('toolv').classList.remove('on');
+  TOOL_ID='';window.scrollTo(0,0);
+}
+
+function showTool(id){
+  const t=TOOLS[PORTAL].find(x=>x.id===id);
+  if(!t)return;
+  TOOL_ID=id;
+  document.getElementById('tv-nm').textContent=t.name;
+  document.getElementById('tv-desc').textContent=t.desc;
+
+  const form=document.getElementById('tform');
+  form.innerHTML=t.fields.map(f=>{
+    let input='';
+    if(f.type==='sel'){
+      input=`<select class="fsel" id="f-${f.id}"><option value="" disabled selected>Select an option</option>${f.opts.map(o=>`<option>${o}</option>`).join('')}</select>`;
+    } else if(f.type==='ta'){
+      input=`<textarea class="fta" id="f-${f.id}" placeholder="${f.ph||''}"></textarea>`;
+    } else {
+      input=`<input class="fi" id="f-${f.id}" type="text" placeholder="${f.ph||''}"/>`;
+    }
+    return `<div class="fg"><label class="fl" for="f-${f.id}">${f.label}</label>${input}</div>`;
+  }).join('');
+  form.innerHTML+=`<button class="genbtn" disabled>Submit — Coming Soon</button>`;
+
+  document.getElementById('gridv').style.display='none';
+  document.getElementById('toolv').classList.add('on');
+  window.scrollTo(0,0);
+
+  form.querySelectorAll('textarea').forEach(el=>{
+    el.addEventListener('input',function(){
+      this.style.height='38px';this.style.height=Math.min(this.scrollHeight,104)+'px';
+    });
+  });
+}
+
+function signOut(){
+  PORTAL='';TOOL_ID='';
+  resetAccent();fadeToScr('login');
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();}});
+</script>
+</body>
+</html>
